@@ -8,20 +8,34 @@ const LeapLightNodeModule = buildModule("LeapLightNodeModule", (m) => {
   // 1. initialOwner - The address that will own the contract
   // 2. signerAddress - The address that will sign mint requests
 
-  const stageMetadataURIs = [
-    "ipfs://bafkreic34xb4dxakqblqw4o65vq55bp3gyh4zob25a4rgz7xwput7zehqm",
-    "ipfs://bafkreiexiatuttauxjjfr6g5dqnoqomwisdaqjqyh7gktznyj3gure2adq",
-    "ipfs://bafkreig47uuqono6ebthikjfwb7qxw34p55ukjvpo7paedmgqiftddghiy"
+  const stageMetadata = [
+    `{
+  "description": "Leap Light Node",
+  "image": "ipfs://bafkreih7wsarzz47ejfeatkk66e6xvpli7blqle2fnl26zk66bhicflboa",
+  "name": "Leap Light Node",
+  "attributes": [{ "trait_type": "Stage", "value": "1" }]
+}`,
+    `{
+  "description": "Leap Light Node",
+  "image": "ipfs://bafkreidwlupbssogm4lwgacqmdhcsr4jkrtxfbfsznodkq5povhs3gqfxa",
+  "name": "Leap Light Node",
+  "attributes": [{ "trait_type": "Stage", "value": "2" }]
+}`,
+    `{
+  "description": "Leap Light Node",
+  "image": "ipfs://bafkreiha2ugq5dvhebc2n2owiljl6ygkncnejms4o26fexnae7ldfpm5um",
+  "name": "Leap Light Node",
+  "attributes": [{ "trait_type": "Stage", "value": "3" }]
+}`,
   ];
 
   const leapLightNode = m.contract("LeapLightNode", [
     m.getAccount(0), // Using the first account as the initial owner
     m.getAccount(1), // Using the second account as the signer address
-    stageMetadataURIs
+    stageMetadata
   ]);
 
   return { leapLightNode };
 });
 
 export default LeapLightNodeModule;
-
