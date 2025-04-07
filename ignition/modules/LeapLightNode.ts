@@ -3,39 +3,25 @@
 
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
-const LeapLightNodeModule = buildModule("LeapLightNodeModule", (m) => {
-  // Deploy the LeapLightNode contract with required constructor parameters:
-  // 1. initialOwner - The address that will own the contract
-  // 2. signerAddress - The address that will sign mint requests
+const LeapLightNodeV0Module = buildModule("LeapLightNodeV0Module", (m) => {
+ 
+    // Consider compressing the metadata or moving it to a separate file
+    const stageMetadata = [
+        `{"description":"Leap Light Node","image":"ipfs://bafkreih7wsarzz47ejfeatkk66e6xvpli7blqle2fnl26zk66bhicflboa","name":"Leap Light Node","attributes":[{"trait_type":"Stage","value":"1"}]}`,
+        `{"description":"Leap Light Node","image":"ipfs://bafkreidwlupbssogm4lwgacqmdhcsr4jkrtxfbfsznodkq5povhs3gqfxa","name":"Leap Light Node","attributes":[{"trait_type":"Stage","value":"2"}]}`,
+        `{"description":"Leap Light Node","image":"ipfs://bafkreiha2ugq5dvhebc2n2owiljl6ygkncnejms4o26fexnae7ldfpm5um","name":"Leap Light Node","attributes":[{"trait_type":"Stage","value":"3"}]}`,
+    ];
+    
+    const leapLightNodeV0 = m.contract("LeapLightNodeV0", [
+        m.getAccount(0),
+        m.getAccount(1),
+        stageMetadata,
+    ]);
 
-  const stageMetadata = [
-    `{
-  "description": "Leap Light Node",
-  "image": "ipfs://bafkreih7wsarzz47ejfeatkk66e6xvpli7blqle2fnl26zk66bhicflboa",
-  "name": "Leap Light Node",
-  "attributes": [{ "trait_type": "Stage", "value": "1" }]
-}`,
-    `{
-  "description": "Leap Light Node",
-  "image": "ipfs://bafkreidwlupbssogm4lwgacqmdhcsr4jkrtxfbfsznodkq5povhs3gqfxa",
-  "name": "Leap Light Node",
-  "attributes": [{ "trait_type": "Stage", "value": "2" }]
-}`,
-    `{
-  "description": "Leap Light Node",
-  "image": "ipfs://bafkreiha2ugq5dvhebc2n2owiljl6ygkncnejms4o26fexnae7ldfpm5um",
-  "name": "Leap Light Node",
-  "attributes": [{ "trait_type": "Stage", "value": "3" }]
-}`,
-  ];
-
-  const leapLightNode = m.contract("LeapLightNode", [
-    m.getAccount(0), // Using the first account as the initial owner
-    m.getAccount(1), // Using the second account as the signer address
-    stageMetadata
-  ]);
-
-  return { leapLightNode };
+    return { leapLightNodeV0 };
 });
 
-export default LeapLightNodeModule;
+export default LeapLightNodeV0Module;
+
+// Run this command to deploy the module to the sketchpad network
+// npx hardhat ignition deploy ./ignition/modules/LeapLightNode.ts --network sketchpad

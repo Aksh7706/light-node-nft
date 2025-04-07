@@ -1,9 +1,9 @@
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import { LeapLightNodeV0 } from "../typechain-types";
+import { ethers, upgrades } from "hardhat";
+import { LeapLightNode } from "../typechain-types";
 
-describe("LeapLightNodeV0", function () {
+describe("LeapLightNode", function () {
   let owner: SignerWithAddress;
   let signer: SignerWithAddress;
   let whiteListed: SignerWithAddress;
@@ -31,7 +31,7 @@ describe("LeapLightNodeV0", function () {
 }`,
   ];
 
-  let leapLightNode: LeapLightNodeV0;
+  let leapLightNode: LeapLightNode;
 
   // Helper function for creating signatures
   async function createMintSignature(to: SignerWithAddress) {
@@ -59,18 +59,26 @@ describe("LeapLightNodeV0", function () {
   before(async function () {
     [owner, signer, whiteListed, whiteListed2, whiteListed3] = await ethers.getSigners();
     const LeapLightNode = await ethers.getContractFactory(
-      "LeapLightNodeV0"
+      "LeapLightNode"
     );
-    leapLightNode = await LeapLightNode.deploy(owner.address, signer.address, stageMetadata) as LeapLightNodeV0;
+
+    leapLightNode = await upgrades.deployProxy(
+      LeapLightNode,
+      [owner.address, signer.address, stageMetadata],
+      {
+        kind: 'uups',
+        initializer: 'initialize'
+      }
+    );
     await leapLightNode.waitForDeployment();
   });
 
   it("should successfully mint with valid signature", async function () {
     const signature = await createMintSignature(whiteListed);
-    
+
     const tx = await leapLightNode.connect(whiteListed).safeMint(signature);
     await tx.wait();
-    
+
     const tokenOwner = await leapLightNode.ownerOf(0);
     expect(tokenOwner).to.equal(whiteListed.address);
   });
@@ -114,7 +122,7 @@ describe("LeapLightNodeV0", function () {
   it("should batch update stages by address", async function () {
     // Mint tokens to multiple addresses
     const signature = await createMintSignature(owner);
-    
+
     const tx = await leapLightNode.connect(owner).safeMint(signature);
     await tx.wait();
 
@@ -131,11 +139,11 @@ describe("LeapLightNodeV0", function () {
       const stage = await leapLightNode.getTokenStageByAddress(users[i].address);
       expect(stage).to.equal(STAGE_3);
 
-     // Check metadata URI
-     const uri = await leapLightNode.tokenURI(i);
-     const base64Data = uri.split(',')[1];
-     const decodedUri = Buffer.from(base64Data, 'base64').toString();
-     expect(JSON.parse(decodedUri)).to.deep.equal(JSON.parse(stageMetadata[Number(stage) - 1]));
+      // Check metadata URI
+      const uri = await leapLightNode.tokenURI(i);
+      const base64Data = uri.split(',')[1];
+      const decodedUri = Buffer.from(base64Data, 'base64').toString();
+      expect(JSON.parse(decodedUri)).to.deep.equal(JSON.parse(stageMetadata[Number(stage) - 1]));
     }
   });
 

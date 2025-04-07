@@ -2,15 +2,21 @@
 // Compatible with OpenZeppelin Contracts ^5.0.0
 pragma solidity ^0.8.24;
 
-import {ERC721Updatable} from "@forma-dev/sdk/contracts/token/ERC721/ERC721Updatable.sol";
-import {ERC721 as ERC721OZ} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import {ERC721Enumerable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import {ERC721Royalty} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Royalty.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import { ERC721UpdatableUpgradeable } from "@forma-dev/sdk/contracts/upgradeable/token/ERC721/ERC721UpdatableUpgradeable.sol";
+import { ERC721BaseUpgradeable } from "@forma-dev/sdk/contracts/upgradeable/token/ERC721/ERC721BaseUpgradeable.sol";
+import {
+    ERC721Upgradeable as ERC721UpgradeableOZ
+} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 
-contract LeapLightNodeV0 is ERC721Updatable, ERC721Enumerable, Ownable, EIP712 {
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { ERC721EnumerableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
+
+contract LeapLightNode is Initializable, ERC721UpdatableUpgradeable, ERC721EnumerableUpgradeable, OwnableUpgradeable, EIP712Upgradeable, UUPSUpgradeable {
     uint256 private _nextTokenId;
     address private _signerAddress;
 
@@ -29,15 +35,23 @@ contract LeapLightNodeV0 is ERC721Updatable, ERC721Enumerable, Ownable, EIP712 {
     event SignerAddressUpdated(address indexed oldSigner, address indexed newSigner);
     event StageMetadataUpdated(bytes1 indexed stage, string metadata);
 
-    constructor(
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(
         address initialOwner,
         address signerAddress,
         string[] memory stageMetadata
-    )
-        ERC721OZ("LeapLightNode", "LLN")
-        EIP712("LeapLightNode", "1.0")
-        Ownable(initialOwner)
-    {
+    ) public initializer {
+        __ERC721_init("LeapLightNode", "LLN");
+        __ERC721Enumerable_init();
+        __Ownable_init(initialOwner);
+        __EIP712_init("LeapLightNode", "1.0");
+        __UUPSUpgradeable_init();
+     
         require(signerAddress != address(0), "Signer cannot be zero address");
         require(stageMetadata.length == 3, "Must provide exactly 3 stage metadata blobs");
 
@@ -71,13 +85,19 @@ contract LeapLightNodeV0 is ERC721Updatable, ERC721Enumerable, Ownable, EIP712 {
     }
 
     // The following function override to make the NFT non-transferrable
-    function _update(address to, uint256 tokenId, address auth) internal override(ERC721OZ, ERC721Enumerable) returns (address) {
+    function _update(address to, uint256 tokenId, address auth) internal override(ERC721UpgradeableOZ, ERC721EnumerableUpgradeable) returns (address) {
         address from = _ownerOf(tokenId);
         // Only allow initial minting (from zero address)
         // Prevent all transfers (including burning)
         require(from == address(0), "Soulbound: NFT cannot be transferred or burned");
         return super._update(to, tokenId, auth);
     }
+
+    function _authorizeUpgrade(address newImplementation)
+        internal
+        override
+        onlyOwner
+    {}
 
     // Admin functions
     // 1. Update signer address
@@ -137,17 +157,17 @@ contract LeapLightNodeV0 is ERC721Updatable, ERC721Enumerable, Ownable, EIP712 {
     }
 
     // The following functions are overrides required by Solidity.
-    function _increaseBalance(address account, uint128 value) internal override(ERC721OZ, ERC721Enumerable) {
+    function _increaseBalance(address account, uint128 value) internal override(ERC721UpgradeableOZ, ERC721EnumerableUpgradeable) {
         super._increaseBalance(account, value);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view override(ERC721Royalty, ERC721Enumerable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721BaseUpgradeable, ERC721EnumerableUpgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
     function tokenURI(
         uint256 tokenId
-    ) public view override(ERC721OZ, ERC721Updatable) returns (string memory) {
+    ) public view override(ERC721UpgradeableOZ, ERC721UpdatableUpgradeable) returns (string memory) {
         return _uri(tokenId);
     }
 
