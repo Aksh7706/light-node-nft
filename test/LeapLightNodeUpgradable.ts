@@ -34,7 +34,7 @@ describe("LeapLightNode", function () {
   let leapLightNode: LeapLightNode;
 
   // Helper function for creating signatures
-  async function createMintSignature(to: SignerWithAddress) {
+  async function createMintSignature(to: SignerWithAddress, stage: string = "0x01") {
     const domain = {
       name: "LeapLightNode",
       version: "1.0",
@@ -44,12 +44,14 @@ describe("LeapLightNode", function () {
 
     const types = {
       Mint: [
-        { name: "to", type: "address" }
+        { name: "to", type: "address" },
+        { name: "stage", type: "bytes1" }
       ]
     };
 
     const value = {
-      to: to.address
+      to: to.address,
+      stage: stage
     };
 
     return await signer.signTypedData(domain, types, value);
@@ -74,9 +76,10 @@ describe("LeapLightNode", function () {
   });
 
   it("should successfully mint with valid signature", async function () {
-    const signature = await createMintSignature(whiteListed);
+    const stage = "0x01";
+    const signature = await createMintSignature(whiteListed, stage);
 
-    const tx = await leapLightNode.connect(whiteListed).safeMint(signature);
+    const tx = await leapLightNode.connect(whiteListed).safeMint(whiteListed.address, stage, signature);
     await tx.wait();
 
     const tokenOwner = await leapLightNode.ownerOf(0);
@@ -84,8 +87,29 @@ describe("LeapLightNode", function () {
   });
 
   it("should not allow minting to an address that already has a token", async function () {
-    const signature = await createMintSignature(whiteListed);
-    await expect(leapLightNode.connect(whiteListed).safeMint(signature)).to.be.revertedWith("Address has already minted an NFT");
+    const stage = "0x01";
+    const signature = await createMintSignature(whiteListed, stage);
+    await expect(leapLightNode.connect(whiteListed).safeMint(whiteListed.address, stage, signature)).to.be.revertedWith("Address has already minted an NFT");
+  });
+
+  it("should not allow minting with invalid stage", async function () {
+    const invalidStage = "0x04"; // Only 0x01, 0x02, 0x03 are valid
+    const signature = await createMintSignature(whiteListed3, invalidStage);
+
+    await expect(
+      leapLightNode.connect(whiteListed3).safeMint(whiteListed3.address, invalidStage, signature)
+    ).to.be.revertedWith("Invalid stage");
+  });
+
+  it("should not allow minting with signature for different address", async function () {
+    const stage = "0x01";
+    // Create signature for whiteListed3
+    const signature = await createMintSignature(whiteListed3, stage);
+
+    // Try to use that signature to mint to a different address
+    await expect(
+      leapLightNode.connect(whiteListed3).safeMint(owner.address, stage, signature)
+    ).to.be.revertedWith("Invalid signer");
   });
 
   it("should correctly return token stage", async function () {
@@ -121,9 +145,10 @@ describe("LeapLightNode", function () {
 
   it("should batch update stages by address", async function () {
     // Mint tokens to multiple addresses
-    const signature = await createMintSignature(owner);
+    const stage = "0x01";
+    const signature = await createMintSignature(owner, stage);
 
-    const tx = await leapLightNode.connect(owner).safeMint(signature);
+    const tx = await leapLightNode.connect(owner).safeMint(owner.address, stage, signature);
     await tx.wait();
 
     const users = [whiteListed, owner];
@@ -169,18 +194,21 @@ describe("LeapLightNode", function () {
 
     const types = {
       Mint: [
-        { name: "to", type: "address" }
+        { name: "to", type: "address" },
+        { name: "stage", type: "bytes1" }
       ]
     };
 
+    const stage = "0x01";
     const value = {
-      to: whiteListed2.address
+      to: whiteListed2.address,
+      stage: stage
     };
 
     const signature = await newSigner.signTypedData(domain, types, value);
 
     // This should succeed if the signer address was properly updated
-    const txMint = await leapLightNode.connect(whiteListed2).safeMint(signature);
+    const txMint = await leapLightNode.connect(whiteListed2).safeMint(whiteListed2.address, stage, signature);
     await txMint.wait();
 
     const tokenId = await leapLightNode.tokenOfOwnerByIndex(whiteListed2.address, 0);
@@ -190,9 +218,13 @@ describe("LeapLightNode", function () {
     expect(totalSupply).to.equal(3);
 
     // Try with the old signer, which should now fail
-    const oldSignature = await createMintSignature(whiteListed3);
+    const oldSignature = await signer.signTypedData(domain, types, {
+      to: whiteListed3.address,
+      stage: stage
+    });
+
     await expect(
-      leapLightNode.connect(whiteListed3).safeMint(oldSignature)
+      leapLightNode.connect(whiteListed3).safeMint(whiteListed3.address, stage, oldSignature)
     ).to.be.revertedWith("Invalid signer");
   });
 

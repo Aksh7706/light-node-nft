@@ -22,7 +22,7 @@ contract LeapLightNodeV0 is ERC721Updatable, ERC721Enumerable, Ownable, EIP712 {
     bytes1 private constant STAGE_2 = 0x02;
     bytes1 private constant STAGE_3 = 0x03;
 
-    bytes32 private constant MINT_TYPEHASH = keccak256("Mint(address to)");
+    bytes32 private constant MINT_TYPEHASH = keccak256("Mint(address to,bytes1 stage)");
 
     // Events for important state changes
     event TokenStageUpdated(uint256 indexed tokenId, bytes1 stage);
@@ -61,13 +61,14 @@ contract LeapLightNodeV0 is ERC721Updatable, ERC721Enumerable, Ownable, EIP712 {
         _;
     }
 
-    function safeMint(bytes memory signature) validateMintRequest(msg.sender) public {
+    function safeMint(address to, bytes1 stage, bytes memory signature) validateMintRequest(to) validateStage(stage) public {
         uint256 tokenId = _nextTokenId++;
-        bytes32 digest = _hashTypedDataV4(keccak256(abi.encode(MINT_TYPEHASH, msg.sender)));
+        bytes32 digest = _hashTypedDataV4(keccak256(abi.encode(MINT_TYPEHASH, to, stage)));
         address signer = ECDSA.recover(digest, signature);
         require(signer == _signerAddress, "Invalid signer");
-        _safeMint(msg.sender, tokenId);
-        _tokenStages[tokenId] = STAGE_1;
+        _safeMint(to, tokenId);
+        _tokenStages[tokenId] = stage;
+        emit TokenStageUpdated(tokenId, stage);
     }
 
     // The following function override to make the NFT non-transferrable
