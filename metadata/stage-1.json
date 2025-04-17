@@ -1,0 +1,44 @@
+{
+    "name": "Lumi",
+    "description": "Lumis by Leap are unique flying companions for the magnificent Mammoths. As you run a light node & contribute to Celestia, your Lumi will grow & evolve. Together, Lumis & Mammoths will discover places the world has never seen before.",
+    "image": "ipfs://bafybeihtxmvna2qdjbouiw2acptcno3usojdoojxhllcdqumfuq6ot42qm",
+    "animation_url": "ipfs://bafybeie32hwptudyodq7ch3xljgad5zufdemji2qcuznmdkcippl6azdfa",
+    "attributes": [
+        {
+            "trait_type": "Age",
+            "value": "Sprout"
+        },
+        {
+            "trait_type": "Activity",
+            "value": "Walking, Eating"
+        }
+    ],
+    "formats": [
+        {
+            "uri": "ipfs://bafybeie32hwptudyodq7ch3xljgad5zufdemji2qcuznmdkcippl6azdfa",
+            "mime_type": "video/mp4",
+            "file_size": 24490530,
+            "dimensions": {
+                "value": "1080x1080",
+                "unit": "px"
+            },
+            "hash": {
+                "value": "eb832ad801741f77866d4af9e576ec90db6585a966bbb9ec69b2cc973ed2717c",
+                "algo": "sha-256"
+            }
+        },
+        {
+            "uri": "ipfs://bafybeihtxmvna2qdjbouiw2acptcno3usojdoojxhllcdqumfuq6ot42qm",
+            "mime_type": "image/png",
+            "file_size": 276362,
+            "dimensions": {
+                "value": "1080x1080",
+                "unit": "px"
+            },
+            "hash": {
+                "value": "c62e0eef8167c5c93d7d355b6d6e63abae8ff0b6c849de2ab8c2c9cac79b2021",
+                "algo": "sha-256"
+            }
+        }
+    ]
+}

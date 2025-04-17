@@ -2,6 +2,10 @@
 // Compatible with OpenZeppelin Contracts ^5.0.0
 pragma solidity ^0.8.24;
 
+import { ContractMetadata } from "@forma-dev/sdk/contracts/metadata/ContractMetadata.sol";
+import {
+    ContractMetadataUpgradeable
+} from "@forma-dev/sdk/contracts/upgradeable/metadata/ContractMetadataUpgradeable.sol";
 import { ERC721UpdatableUpgradeable } from "@forma-dev/sdk/contracts/upgradeable/token/ERC721/ERC721UpdatableUpgradeable.sol";
 import { ERC721BaseUpgradeable } from "@forma-dev/sdk/contracts/upgradeable/token/ERC721/ERC721BaseUpgradeable.sol";
 import {
@@ -16,7 +20,7 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
 
-contract LeapLightNode is Initializable, ERC721UpdatableUpgradeable, ERC721EnumerableUpgradeable, OwnableUpgradeable, EIP712Upgradeable, UUPSUpgradeable {
+contract LumiERC721 is Initializable, ERC721UpdatableUpgradeable, ERC721EnumerableUpgradeable, OwnableUpgradeable, ContractMetadataUpgradeable, EIP712Upgradeable, UUPSUpgradeable {
     uint256 private _nextTokenId;
     address private _signerAddress;
 
@@ -46,10 +50,11 @@ contract LeapLightNode is Initializable, ERC721UpdatableUpgradeable, ERC721Enume
         address signerAddress,
         string[] memory stageMetadata
     ) public initializer {
-        __ERC721_init("LeapLightNode", "LLN");
+        __ERC721_init("Lumi", "LUMI");
         __ERC721Enumerable_init();
         __Ownable_init(initialOwner);
-        __EIP712_init("LeapLightNode", "1.0");
+        __ContractMetadata_init("Lumi");
+        __EIP712_init("LumiERC721", "1.0");
         __UUPSUpgradeable_init();
      
         require(signerAddress != address(0), "Signer cannot be zero address");
@@ -177,7 +182,16 @@ contract LeapLightNode is Initializable, ERC721UpdatableUpgradeable, ERC721Enume
     }
 
     function _getTokenMetadataKey(bytes1 stage) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked("LeapLightNode", stage));
+        return keccak256(abi.encodePacked("LumiERC721", stage));
+    }
+
+    function name() public view override(ERC721UpgradeableOZ, ContractMetadata) returns (string memory) {
+        return ContractMetadata.name();
+    }
+
+    /// @dev Returns whether contract metadata can be set in the given execution context.
+    function _canSetContractMetadata() internal view override returns (bool) {
+        return owner() == _msgSender();
     }
 
     /// @dev Returns whether token metadata can be set in the given execution context.
